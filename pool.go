@@ -365,7 +365,8 @@ func (p *Pool) Start() error {
 		}
 		if err := p.respondToPings(); err != nil {
 			// TODO: send the err accross a channel instead of panicking
-			panic(err)
+			//panic(err)
+			p.Close()
 		}
 	}()
 	if err := p.purgeStalePools(); err != nil {
@@ -386,7 +387,8 @@ func (p *Pool) Start() error {
 	go func() {
 		if err := p.queryLoop(); err != nil {
 			// TODO: send the err accross a channel instead of panicking
-			panic(err)
+			//panic(err)
+			p.Close()
 		}
 	}()
 	return nil
@@ -407,7 +409,7 @@ func (p *Pool) Close() {
 // worker pool should call Wait (and Close before that if needed) before
 // exiting.
 func (p *Pool) Wait() error {
-	// The shared waitgroup will only return after each worker is finished
+	// The shared wait group will only return after each worker is finished
 	p.wg.Wait()
 	// Remove the pool id from the set of active pools, only after we know
 	// each worker finished executing.
@@ -437,14 +439,13 @@ func (p *Pool) queryLoop() error {
 			}
 		}
 	}
-	return nil
 }
 
 // sendNextJobs queries the database to find the next n ready jobs, then
 // sends those jobs to the jobs channel, effectively delegating them to
 // a worker.
 func (p *Pool) sendNextJobs(n int) error {
-	jobs, err := p.getNextJobs(p.config.BatchSize)
+	jobs, err := p.getNextJobs(n)
 	if err != nil {
 		return err
 	}
