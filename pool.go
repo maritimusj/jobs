@@ -226,7 +226,8 @@ func (p *Pool) purgeStalePools() error {
 		go func(pool *Pool) {
 			if err := p.pingAndPurgeIfNeeded(pool); err != nil {
 				// TODO: send accross an err channel instead of panicking
-				panic(err)
+				//panic(err)
+				p.Close()
 			}
 		}(pool)
 	}
