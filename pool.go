@@ -40,6 +40,7 @@ type Pool struct {
 	// NOTE: currently only used in one test (TestStalePoolsArePurged)
 	// and might be removed if we refactor later.
 	sync.RWMutex
+	closer sync.Once
 }
 
 // PoolConfig is a set of configuration options for pools. Setting any value
@@ -401,7 +402,9 @@ func (p *Pool) Start() error {
 // wait until all workers are done executing their current jobs, use the
 // Wait method.
 func (p *Pool) Close() {
-	close(p.exit)
+	p.closer.Do(func() {
+		close(p.exit)
+	})
 }
 
 // Wait will return when all workers are done executing their jobs.
